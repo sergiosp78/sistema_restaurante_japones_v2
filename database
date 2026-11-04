@@ -1,0 +1,62 @@
+import sqlite3
+
+def criar_banco():
+    # Conecta ao banco (se o arquivo não existir, ele cria)
+    conexao = sqlite3.connect('restaurante.db')
+    cursor = conexao.cursor()
+
+    # Cria a tabela Categoria
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS categoria (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT NOT NULL
+        )
+    ''')
+
+    # Cria a tabela Prato
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS prato (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT NOT NULL,
+            preco REAL NOT NULL,
+            categoria_id INTEGER,
+            FOREIGN KEY (categoria_id) REFERENCES categoria(id)
+        )
+    ''')
+
+    # Cria a tabela Pedido
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS pedido (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            mesa INTEGER NOT NULL,
+            data_hora TEXT NOT NULL,
+            status TEXT NOT NULL
+        )
+    ''')
+
+    # Cria a tabela Item Pedido
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS item_pedido (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            pedido_id INTEGER,
+            prato_id INTEGER,
+            quantidade INTEGER NOT NULL,
+            preco_unitario REAL NOT NULL,
+            FOREIGN KEY (pedido_id) REFERENCES pedido(id),
+            FOREIGN KEY (prato_id) REFERENCES prato(id)
+        )
+    ''')
+
+    # Insere algumas categorias iniciais (para não começar vazio)
+    cursor.execute("SELECT COUNT(*) FROM categoria")
+    if cursor.fetchone()[0] == 0:
+        categorias = [('Entrada',), ('Sushis e sashimis',), ('Pratos quentes',), ('Sobremesas',), ('Bebidas não alcoólicas',)]
+        cursor.executemany('INSERT INTO categoria (nome) VALUES (?)', categorias)
+
+    conexao.commit()
+    conexao.close()
+
+# Executa a função se o arquivo for rodado diretamente
+if __name__ == "__main__":
+    criar_banco()
+    print("Banco de dados e tabelas criados com sucesso!")
